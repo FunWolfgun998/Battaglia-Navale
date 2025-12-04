@@ -63,6 +63,8 @@ namespace Battaglia_navale_Eventi_Form
                     return Color.DarkBlue;  // Mancato (Colpo a vuoto)
                 case 3:
                     return Color.Red;       // Colpito (Parte di nave colpita)
+                case 4:
+                    return Color.Black;     // Affondata (Tutta la nave colpita)
                 default:
                     return Color.LightGray; // Stato non riconosciuto
             }

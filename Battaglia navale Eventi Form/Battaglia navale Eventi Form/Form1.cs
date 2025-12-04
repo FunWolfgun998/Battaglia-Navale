@@ -13,10 +13,10 @@ namespace Battaglia_navale_Eventi_Form
 {
     public partial class Battaglia_navale : Form
     {
-        DataGridView dgvPL1;
-        DataGridView dgvPL2;
+        DataGridView dgv1;
+        DataGridView dgv2;
         List<Ship> flottePL1;
-        List<Ship> flottePL2;
+        List<Ship> flotta2;
         CPU cpu;
         bool isPvPGame;
         bool TurnPL1 = true;
@@ -82,33 +82,29 @@ namespace Battaglia_navale_Eventi_Form
             }
             MessageBox.Show("Posizioni Player 2 salvate");
 
-            dgvPL1.Location = new Point(10, 10);
-            dgvPL1.CellMouseClick += DataGridViewMappa_CellMouseClick;
-            this.Controls.Add(dgvPL1);
-            dgvPL2.Location = new Point(10, 10);
-            dgvPL2.CellMouseClick += DataGridViewMappa_CellMouseClick;
-            this.Controls.Add(dgvPL2);
+            SetUpGrids();
             PlayTurn();
 
         }
         private void SalvaPosizionamentoNavi(object sender, PosizionamentoEventArgs e)
         {
 
-            if (dgvPL1 == null)
+            if (dgv1 == null)
             {
-                dgvPL1 = e.Griglia;
+                dgv1 = e.Griglia;
 
                 flottePL1 = e.Flotta;
             }
             else
             {
-                dgvPL2 = e.Griglia;
+                dgv2 = e.Griglia;
 
-                flottePL2 = e.Flotta;
+                flotta2 = e.Flotta;
             }
         }
         private async void DataGridViewMappa_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            if (!isPvPGame && !TurnPL1) return;
             if (isProcessingClick)
             {
                 return;
@@ -161,16 +157,29 @@ namespace Battaglia_navale_Eventi_Form
         }
 
         #endregion
+        private void SetUpGrids(bool PvP = true)
+        {
+
+            dgv1.Location = new Point(this.Width / 2, 10);
+            this.Controls.Add(dgv1);
+
+            dgv2.Location = new Point((this.Width - dgv2.Width) / 2, (this.Height - dgv2.Height) / 2);
+            this.Controls.Add(dgv2);
+
+            if (PvP)
+            dgv1.CellMouseClick += DataGridViewMappa_CellMouseClick;
+            dgv2.CellMouseClick += DataGridViewMappa_CellMouseClick;
+
+        }
         #region PvE
         private void PvE_Setup()
         {
-            cpu = new CPU();
-            // 1. Posizionamento del Giocatore Umano (il tuo codice qui è corretto)
+
             using (Posiziona_navi n = new Posiziona_navi())
             {
                 n.PosizionateTutteLeNavi += (sender, e) =>
                 {
-                    dgvPL1 = e.Griglia;
+                    dgv1 = e.Griglia;
                     flottePL1 = e.Flotta;
                 };
 
@@ -182,19 +191,22 @@ namespace Battaglia_navale_Eventi_Form
             }
             MessageBox.Show("Le tue posizioni sono state salvate. Ora la CPU posizionerà le sue navi.");
 
+            cpu = new CPU();
             var setupCPU = CreaGrigliaCPUConNavi();
-            dgvPL2 = setupCPU.Griglia;
-            flottePL2 = setupCPU.Flotta;
 
-            dgvPL1.Location = new Point(10, 10);
-            this.Controls.Add(dgvPL1);
+            dgv2 = setupCPU.Griglia;
+            flotta2 = setupCPU.Flotta;
+            SetUpGrids(false);
 
-            dgvPL2.Location = new Point(10, 10);
-            dgvPL2.CellMouseClick += DataGridViewMappa_CellMouseClick;
-            this.Controls.Add(dgvPL2);
 
             PlayTurn();
         }
+
+        private void Cpu_OnLauch(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         private (DataGridView Griglia, List<Ship> Flotta) CreaGrigliaCPUConNavi()
         {
             // 1. Crea la flotta che la CPU deve posizionare
@@ -342,39 +354,63 @@ namespace Battaglia_navale_Eventi_Form
         }
         private void PlayTurn()
         {
-            if (flottePL2.All(nave => nave.Affondata))
+            if (flotta2.All(nave => nave.Affondata)|| flottePL1.All(nave => nave.Affondata))
             {
                 Fine();
                 return;
             }
 
-            if (flottePL1.All(nave => nave.Affondata))
-            {
-                Fine();
-                return;
-            }
             lbl_n_moves.Text = $"Mosse: {nmosse}";
 
-            dgvPL2.Visible = TurnPL1;
-            dgvPL1.Visible = !TurnPL1;
+            dgv2.Visible = TurnPL1;
+            dgv1.Visible = !TurnPL1;
 
             lbl_turn.Text = !isPvPGame ? TurnPL1 ? "Tocca a te!" : "Turno della CPU...": TurnPL1? "Turno: Player 1" : "Turno: Player 2";
             if(!isPvPGame && !TurnPL1)
             {
-                EseguiTurnoCPU();
+                cpu.Attack();
+                //EseguiTurnoCPU();
             }
         }
         private void AttaccoRandom()
         {
-            int rand = cpu.r.Next(0, cpu.coordinate.Count);
-            (int X, int y) c = cpu.coordinate[rand];
-            cpu.coordinate.RemoveAt(rand);
-            DataGridViewCell cell = dgvPL1.Rows[x].Cells[y];
+
+            (int x, int y) = cpu.AttackRandomCell();
+            DataGridViewCell cella = dgv1.Rows[x].Cells[y];
+            InfoCella info = (InfoCella)cella.Tag;
+            if (info.stato == 0) // ACQUA (Vuoto)
+            {
+                info.stato = 2; // Imposta stato "Mancato"
+                cella.Style.BackColor = info.OttieniColoreDaStato();
+                SoundManager.PlayAcqua();
+                Console.WriteLine($"CPU ha mancato in {x},{y}");
+            }
+            else if (info.stato == 1) // NAVE
+            {
+                info.stato = 3; // Imposta stato "Colpito"
+                info.NaveRiferimento.Colpito(); // Riduce la vita della nave
+                cella.Style.BackColor = info.OttieniColoreDaStato();
+                SoundManager.PlayColpito();
+                Console.WriteLine($"CPU ha colpito in {x},{y}");
+            }
+
+            // 5. Passa il turno al giocatore
+            TurnPL1 = true; // Ora tocca al Player 1
+
+            // Richiama PlayTurn per aggiornare le label e verificare vittorie
+            PlayTurn();
+
+        }
+        private void UpdateUICell(DataGridViewCell cell)
+        {
+
+            InfoCella info = (InfoCella)cell.Tag;
+            cell.Style.BackColor = info.OttieniColoreDaStato();
         }
         private void Fine()
         {
-            dgvPL1.Enabled = false;
-            dgvPL2.Enabled = false;
+            dgv1.Enabled = false;
+            dgv2.Enabled = false;
             string vincitore = !isPvPGame ? TurnPL1 ? "Hai vinto te!" : "Ha vinto la CPU" : TurnPL1 ? "Ha vinto Player 1" : "Ha vinto Player 2";
             string messaggio = $"{vincitore}\n\nVuoi giocare un'altra partita?";
             string titolo = "Partita Terminata";
