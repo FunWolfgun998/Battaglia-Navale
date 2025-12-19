@@ -1,0 +1,12 @@
+D:\Scuola\Informatica\Battleship Form\Battleship Form\bin\Debug\Battleship Form.exe.config
+D:\Scuola\Informatica\Battleship Form\Battleship Form\bin\Debug\Battleship Form.exe
+D:\Scuola\Informatica\Battleship Form\Battleship Form\bin\Debug\Battleship Form.pdb
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.csproj.AssemblyReference.cache
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship_Form.MainFormBattleShip.resources
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship_Form.Properties.Resources.resources
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.csproj.GenerateResource.cache
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.csproj.CoreCompileInputs.cache
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.exe
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.pdb
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship Form.exe.config
+D:\Scuola\Informatica\Battleship Form\Battleship Form\obj\Debug\Battleship_Form.FormPlacementShips.resources
